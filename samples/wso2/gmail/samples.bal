@@ -1,6 +1,7 @@
 package samples.wso2.gmail;
 
 import wso2.gmail;
+import ballerina.io;
 
 function main (string[] args) {
     endpoint<gmail:ClientConnector> gmailConnector {
@@ -10,64 +11,64 @@ function main (string[] args) {
     gmail:Error e = {};
 
     if (args[0] == "getUserProfile") {
-        println("-----Calling getUserProfile action-----");
+        io:println("-----Calling getUserProfile action-----");
         gmail:UserProfile gmailResponse = {};
         gmailResponse, e = gmailConnector.getUserProfile();
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     } else if (args[0] == "sendMail") {
-        println("-----Calling sendMail action-----");
+        io:println("-----Calling sendMail action-----");
         gmail:GmailAPI gmailResponse = {};
-        gmail:Message sendMail = {to:"janani22thangavel@gmail.com", subject:"Testing", messageBody:"sendMail"};
-        gmailResponse, e = gmailConnector.sendMail(sendMail);
+        gmail:Message sendEmail = {to:"janani22thangavel@gmail.com", subject:"Testing", messageBody:"sendMail"};
+        gmailResponse, e = gmailConnector.sendEmail(sendEmail);
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     } else if (args[0] == "createDraft") {
-        println("-----Calling createDraft action-----");
+        io:println("-----Calling createDraft action-----");
         gmail:Draft gmailResponse = {};
         gmail:Message createDraft = {to:"janani22thangavel@gmail.com", subject:"Testing", messageBody:"createDraft"};
         gmailResponse, e = gmailConnector.createDraft(createDraft);
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     } else if (args[0] == "update") {
-        println("-----Calling update action-----");
+        io:println("-----Calling update action-----");
         gmail:Draft gmailResponse = {};
         gmail:Message update = {to:"janani22thangavel@gmail.com", subject:"Testing", messageBody:"update"};
         string draftId = args[6];
         gmailResponse, e = gmailConnector.update(draftId, update);
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     } else if (args[0] == "deleteDraft") {
-        println("-----Calling deleteDraft action-----");
+        io:println("-----Calling deleteDraft action-----");
         gmail:StatusCode gmailResponse = {};
         string draftId = args[6];
         gmailResponse, e = gmailConnector.deleteDraft(draftId);
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     } else if (args[0] == "listDrafts") {
-        println("-----Calling listDrafts action-----");
+        io:println("-----Calling listDrafts action-----");
         gmail:Drafts gmailResponse = {};
         gmail:DraftsListFilter listDrafts = {maxResults:"3"};
         gmailResponse, e = gmailConnector.listDrafts(listDrafts);
         if (e.errorMessage == null) {
-            println(gmailResponse);
+            io:println(gmailResponse);
         } else {
-            println(e);
+            io:println(e);
         }
     }
 }

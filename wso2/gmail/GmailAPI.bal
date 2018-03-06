@@ -3,6 +3,7 @@ package wso2.gmail;
 import org.wso2.ballerina.connectors.oauth2;
 import ballerina.net.http;
 import ballerina.util;
+import ballerina.io;
 
 public struct UserProfile {
     string emailAddress;
@@ -117,12 +118,11 @@ public connector ClientConnector (string userId, string accessToken, string refr
 
         response, e = gmailEP.get(getUserProfilePath, request);
         int statusCode = response.statusCode;
-        println("Status code: " + statusCode);
+        io:println("Status code: " + statusCode);
         json gmailJSONResponse = response.getJsonPayload();
 
         if (statusCode == 200) {
-            println(gmailJSONResponse.toString());
-            getUserProfileResponse, _ = <UserProfile>gmailJSONResponse;
+            getUserProfileResponse = <UserProfile, userProfileTrans()>gmailJSONResponse;
         } else {
             errorResponse.errorMessage = gmailJSONResponse.error;
         }
@@ -130,24 +130,24 @@ public connector ClientConnector (string userId, string accessToken, string refr
     }
 
     @Description {value:"Send a mail"}
-    @Param {value:"sendMail: It is a struct. Which contains all optional parameters (to,subject,from,messageBody,
+    @Param {value:"sendEmail: It is a struct. Which contains all optional parameters (to,subject,from,messageBody,
     cc,bcc,id,threadId)"}
     @Return {value:"response struct"}
-    action sendMail (Message sendMail) (GmailAPI, Error) {
+    action sendEmail (Message sendEmail) (GmailAPI, Error) {
         http:OutRequest request = {};
         http:InResponse response = {};
-        GmailAPI sendMailResponse = {};
+        GmailAPI sendEmailResponse = {};
         string concatRequest = "";
 
-        if (sendMail != null) {
-            string to = sendMail.to;
-            string subject = sendMail.subject;
-            string from = sendMail.from;
-            string messageBody = sendMail.messageBody;
-            string cc = sendMail.cc;
-            string bcc = sendMail.bcc;
-            string id = sendMail.id;
-            string threadId = sendMail.threadId;
+        if (sendEmail != null) {
+            string to = sendEmail.to;
+            string subject = sendEmail.subject;
+            string from = sendEmail.from;
+            string messageBody = sendEmail.messageBody;
+            string cc = sendEmail.cc;
+            string bcc = sendEmail.bcc;
+            string id = sendEmail.id;
+            string threadId = sendEmail.threadId;
 
             if (to != "") {
                 concatRequest = concatRequest + "to:" + to + "\n";
@@ -175,22 +175,25 @@ public connector ClientConnector (string userId, string accessToken, string refr
             }
         }
         string encodedRequest = util:base64Encode(concatRequest);
-        json sendMailJSONRequest = {"raw":encodedRequest};
-        string sendMailPath = "/v1/users/" + userId + "/messages/send";
+        encodedRequest = encodedRequest.replace("+", "-");
+        encodedRequest = encodedRequest.replace("/", "_");
+        json sendEmailJSONRequest = {"raw":encodedRequest};
+        string sendEmailPath = "/v1/users/" + userId + "/messages/send";
         request.setHeader("Content-Type", "Application/json");
-        request.setJsonPayload(sendMailJSONRequest);
-        response, e = gmailEP.post(sendMailPath, request);
+        request.setJsonPayload(sendEmailJSONRequest);
+        response, e = gmailEP.post(sendEmailPath, request);
         int statusCode = response.statusCode;
-        println("Status code: " + statusCode);
-        json sendMailJSONResponse = response.getJsonPayload();
+        io:println("Status code: " + statusCode);
+        json sendEmailJSONResponse = response.getJsonPayload();
 
         if (statusCode == 200) {
-            println(sendMailJSONResponse.toString());
-            sendMailResponse, _ = <GmailAPI>sendMailJSONResponse;
+            io:println(sendEmailJSONResponse.toString());
+            sendEmailResponse, _ = <GmailAPI>sendEmailJSONResponse;
+            //sendEmailResponse = <GmailAPI, gmailAPITrans()>sendEmailJSONResponse;
         } else {
-            errorResponse.errorMessage = sendMailJSONResponse.error;
+            errorResponse.errorMessage = sendEmailJSONResponse.error;
         }
-        return sendMailResponse, errorResponse;
+        return sendEmailResponse, errorResponse;
     }
 
     @Description {value:"Create a draft"}
@@ -245,11 +248,11 @@ public connector ClientConnector (string userId, string accessToken, string refr
         request.setJsonPayload(createDraftJSONRequest);
         response, e = gmailEP.post(createDraftPath, request);
         int statusCode = response.statusCode;
-        println("Status code: " + statusCode);
+        io:println("Status code: " + statusCode);
         json createDraftJSONResponse = response.getJsonPayload();
 
         if (statusCode == 200) {
-            println(createDraftJSONResponse.toString());
+            io:println(createDraftJSONResponse.toString());
             createDraftResponse, _ = <Draft>createDraftJSONResponse;
         } else {
             errorResponse.errorMessage = createDraftJSONResponse.error;
@@ -310,11 +313,11 @@ public connector ClientConnector (string userId, string accessToken, string refr
         request.setJsonPayload(updateJSONRequest);
         response, e = gmailEP.put(updatePath, request);
         int statusCode = response.statusCode;
-        println("Status code: " + statusCode);
+        io:println("Status code: " + statusCode);
         json updateJSONResponse = response.getJsonPayload();
 
         if (statusCode == 200) {
-            println(updateJSONResponse.toString());
+            io:println(updateJSONResponse.toString());
             updateResponse, _ = <Draft>updateJSONResponse;
         } else {
             errorResponse.errorMessage = updateJSONResponse.error;
@@ -335,7 +338,7 @@ public connector ClientConnector (string userId, string accessToken, string refr
         json deleteDraftJSONResponse = response.getJsonPayload();
 
         if (statusCode == 204) {
-            println("Status code: " + statusCode);
+            io:println("Status code: " + statusCode);
             deleteDraftResponse, _ = <StatusCode>deleteDraftJSONResponse;
         } else {
             errorResponse.errorMessage = deleteDraftJSONResponse.error;
@@ -384,11 +387,90 @@ public connector ClientConnector (string userId, string accessToken, string refr
         json listDraftsJSONResponse = response.getJsonPayload();
 
         if (statusCode == 200) {
-            println(listDraftsJSONResponse.toString());
+            io:println(listDraftsJSONResponse.toString());
             listDraftsResponse, _ = <Drafts>listDraftsJSONResponse;
         } else {
             errorResponse.errorMessage = listDraftsJSONResponse.error;
         }
         return listDraftsResponse, errorResponse;
     }
+}
+
+transformer <json jsonUserProfile, UserProfile userProfile> userProfileTrans() {
+    userProfile.emailAddress = jsonUserProfile.emailAddress.toString();
+    userProfile.messagesTotal, _ = <int>jsonUserProfile.messagesTotal.toString();
+    userProfile.threadsTotal, _ = <int>jsonUserProfile.threadsTotal.toString();
+    userProfile.historyId = jsonUserProfile.historyId.toString();
+}
+
+transformer <json jsonMessage, Message message> messageTrans() {
+    message.to = jsonMessage.to.toString();
+    message.subject = jsonMessage.subject.toString();
+    message.from = jsonMessage.from.toString();
+    message.messageBody = jsonMessage.messageBody.toString();
+    message.cc = jsonMessage.cc.toString();
+    message.bcc = jsonMessage.bcc.toString();
+    message.id = jsonMessage.id.toString();
+    message.threadId = jsonMessage.threadId.toString();
+}
+
+transformer <json jsonHeader, Header header> headerTrans() {
+    header.name = jsonHeader.name.toString();
+    header.value = jsonHeader.value.toString();
+}
+
+transformer <json jsonParts, Parts parts> partsTrans() {
+    parts.partId = jsonParts.partId.toString();
+    parts.mimeType = jsonParts.mimeType.toString();
+    parts.filename = jsonParts.filename.toString();
+    //parts.headers = jsonParts.headers.toString() != null ? <Header, headerTrans()>jsonParts.headers : {};
+    parts.body = jsonParts.body.toString() != null?<Body, bodyTrans()>jsonParts.body:{};
+}
+
+transformer <json jsonBody, Body body> bodyTrans() {
+    body.attachmentId = jsonBody.attachmentId.toString();
+    body.size, _ = <int>jsonBody.size.toString();
+    body.data = jsonBody.data.toString();
+}
+
+transformer <json jsonMessagePayload, MessagePayload messagePayload> messagePayloadTrans() {
+    messagePayload.partId = jsonMessagePayload.partId.toString();
+    messagePayload.mimeType = jsonMessagePayload.mimeType.toString();
+    messagePayload.filename = jsonMessagePayload.filename.toString();
+    //messagePayload.headers = jsonMessagePayload.headers.toString() != null ? <Header, headerTrans()>jsonMessagePayload.headers : {};
+    messagePayload.body = jsonMessagePayload.body.toString() != null?<Body, bodyTrans()>jsonMessagePayload.body:{};
+//messagePayload.parts = jsonMessagePayload.parts.toString() != null ? <Parts, partsTrans()>jsonMessagePayload.parts : {};
+}
+
+transformer <json jsonGmailAPI, GmailAPI gmailAPI> gmailAPITrans() {
+    gmailAPI.id = jsonGmailAPI.id.toString();
+    gmailAPI.threadId = jsonGmailAPI.threadId.toString();
+    //gmailAPI.labelIds = jsonGmailAPI.labelIds.toString();
+    gmailAPI.snippet = jsonGmailAPI.snippet.toString() != null?jsonGmailAPI.snippet.toString():null;
+    gmailAPI.historyId = jsonGmailAPI.historyId.toString() != null?jsonGmailAPI.historyId.toString():null;
+    gmailAPI.internalDate = jsonGmailAPI.internalDate.toString() != null?jsonGmailAPI.internalDate.toString():null;
+    gmailAPI.payload = jsonGmailAPI.payload.toString() != null?<MessagePayload, messagePayloadTrans()>jsonGmailAPI.payload:{};
+    gmailAPI.sizeEstimate, _ = <int>jsonGmailAPI.sizeEstimate.toString();
+}
+
+transformer <json jsonDraft, Draft draft> draftTrans() {
+    draft.id = jsonDraft.id.toString();
+    draft.mailMessage = jsonDraft.mailMessage.toString() != null?<GmailAPI, gmailAPITrans()>jsonDraft.mailMessage:{};
+}
+
+transformer <json jsonDrafts, Drafts drafts> draftsTrans() {
+//drafts.drafts = jsonDrafts.drafts.toString()  != null ? <Draft, draftTrans()>jsonDrafts.drafts : {};
+    drafts.resultSizeEstimate, _ = <int>jsonDrafts.resultSizeEstimate.toString();
+    drafts.nextPageToken = jsonDrafts.nextPageToken.toString();
+}
+
+transformer <json jsonDraftsListFilter, DraftsListFilter draftsListFilter> draftsListFilter() {
+    draftsListFilter.includeSpamTrash = jsonDraftsListFilter.includeSpamTrash.toString();
+    draftsListFilter.maxResults = jsonDraftsListFilter.maxResults.toString();
+    draftsListFilter.pageToken = jsonDraftsListFilter.pageToken.toString();
+    draftsListFilter.q = jsonDraftsListFilter.q.toString();
+}
+
+transformer <json jsonStatusCode, StatusCode statusCode> statusCode() {
+    statusCode.statusCode, _ = <int>jsonStatusCode.statusCode.toString();
 }

@@ -13,14 +13,18 @@ public struct UserProfile {
 }
 
 public struct Message {
-    string to;
+    string recipient;
     string subject;
+    string body;
+    Options options;
+}
+
+public struct Options{
+    string contentType;
+    string htmlBody;
     string from;
-    string messageBody;
     string cc;
     string bcc;
-    string id;
-    string threadId;
 }
 
 public struct Header {
@@ -86,6 +90,7 @@ public struct Error {
 
 public struct StatusCode {
     int statusCode;
+    string reasonPhrase;
 }
 
 @Description {value:"Gmail client connector"}
@@ -140,37 +145,34 @@ public connector ClientConnector (string userId, string accessToken, string refr
         string concatRequest = "";
 
         if (sendEmail != null) {
-            string to = sendEmail.to;
+            string to = sendEmail.recipient;
             string subject = sendEmail.subject;
-            string from = sendEmail.from;
-            string messageBody = sendEmail.messageBody;
-            string cc = sendEmail.cc;
-            string bcc = sendEmail.bcc;
-            string id = sendEmail.id;
-            string threadId = sendEmail.threadId;
+            string messageBody = sendEmail.body;
+            string contentType = sendEmail.options.contentType;
+            string htmlBody = sendEmail.options.htmlBody;
+            string from = sendEmail.options.from;
+            string cc = sendEmail.options.cc;
+            string bcc = sendEmail.options.bcc;
 
-            if (to != "") {
+            if (to != "" || to != null) {
                 concatRequest = concatRequest + "to:" + to + "\n";
             }
-            if (subject != "") {
+            if (subject != "" || subject != null) {
                 concatRequest = concatRequest + "subject:" + subject + "\n";
             }
-            if (from != "") {
+            if (from != "" || from != null) {
                 concatRequest = concatRequest + "from:" + from + "\n";
             }
-            if (cc != "") {
+            if (cc != "" || cc != null) {
                 concatRequest = concatRequest + "cc:" + cc + "\n";
             }
-            if (bcc != "") {
+            if (bcc != "" || bcc != null) {
                 concatRequest = concatRequest + "bcc:" + bcc + "\n";
             }
-            if (id != "") {
-                concatRequest = concatRequest + "id:" + id + "\n";
-            }
-            if (threadId != "") {
-                concatRequest = concatRequest + "threadId:" + threadId + "\n";
-            }
-            if (messageBody != "") {
+            if (contentType != "" || contentType != null) {
+                concatRequest = concatRequest + "content-type:" + contentType + "\n";
+                concatRequest = concatRequest + "\n" + htmlBody + "\n";
+            } else {
                 concatRequest = concatRequest + "\n" + messageBody + "\n";
             }
         }
@@ -207,41 +209,40 @@ public connector ClientConnector (string userId, string accessToken, string refr
         string concatRequest = "";
 
         if (createDraft != null) {
-            string to = createDraft.to;
+            string to = createDraft.recipient;
             string subject = createDraft.subject;
-            string from = createDraft.from;
-            string messageBody = createDraft.messageBody;
-            string cc = createDraft.cc;
-            string bcc = createDraft.bcc;
-            string id = createDraft.id;
-            string threadId = createDraft.threadId;
+            string messageBody = createDraft.body;
+            string contentType = createDraft.options.contentType;
+            string htmlBody = createDraft.options.htmlBody;
+            string from = createDraft.options.from;
+            string cc = createDraft.options.cc;
+            string bcc = createDraft.options.bcc;
 
-            if (to != "") {
+            if (to != "" || to != null) {
                 concatRequest = concatRequest + "to:" + to + "\n";
             }
-            if (subject != "") {
+            if (subject != "" || subject != null) {
                 concatRequest = concatRequest + "subject:" + subject + "\n";
             }
-            if (from != "") {
+            if (from != "" || from != null) {
                 concatRequest = concatRequest + "from:" + from + "\n";
             }
-            if (cc != "") {
+            if (cc != "" || cc != null) {
                 concatRequest = concatRequest + "cc:" + cc + "\n";
             }
-            if (bcc != "") {
+            if (bcc != "" || bcc != null) {
                 concatRequest = concatRequest + "bcc:" + bcc + "\n";
             }
-            if (id != "") {
-                concatRequest = concatRequest + "id:" + id + "\n";
-            }
-            if (threadId != "") {
-                concatRequest = concatRequest + "threadId:" + threadId + "\n";
-            }
-            if (messageBody != "") {
+            if (contentType != "" || contentType != null) {
+                concatRequest = concatRequest + "content-type:" + contentType + "\n";
+                concatRequest = concatRequest + "\n" + htmlBody + "\n";
+            } else {
                 concatRequest = concatRequest + "\n" + messageBody + "\n";
             }
         }
         string encodedRequest = util:base64Encode(concatRequest);
+        encodedRequest = encodedRequest.replace("+", "-");
+        encodedRequest = encodedRequest.replace("/", "_");
         json createDraftJSONRequest = {"message":{"raw":encodedRequest}};
         string createDraftPath = "/v1/users/" + userId + "/drafts";
         request.setHeader("Content-Type", "Application/json");
@@ -265,50 +266,49 @@ public connector ClientConnector (string userId, string accessToken, string refr
     @Param {value:"update: It is a struct. Which contains all optional parameters (to,subject,from,messageBody
     ,cc,bcc,id,threadId) to update draft"}
     @Return {value:"response structs"}
-    action update (string draftId, Message update) (Draft, Error) {
+    action update (Draft draft, Message update) (Draft, Error) {
         http:OutRequest request = {};
         http:InResponse response = {};
         Draft updateResponse = {};
-        string concatRequest;
+        string concatRequest = "";
 
         if (update != null) {
-            string to = update.to;
+            string to = update.recipient;
             string subject = update.subject;
-            string from = update.from;
-            string messageBody = update.messageBody;
-            string cc = update.cc;
-            string bcc = update.bcc;
-            string id = update.id;
-            string threadId = update.threadId;
+            string messageBody = update.body;
+            string contentType = update.options.contentType;
+            string htmlBody = update.options.htmlBody;
+            string from = update.options.from;
+            string cc = update.options.cc;
+            string bcc = update.options.bcc;
 
-            if (to != "") {
+            if (to != "" || to != null) {
                 concatRequest = concatRequest + "to:" + to + "\n";
             }
-            if (subject != "") {
+            if (subject != "" || subject != null) {
                 concatRequest = concatRequest + "subject:" + subject + "\n";
             }
-            if (from != "") {
+            if (from != "" || from != null) {
                 concatRequest = concatRequest + "from:" + from + "\n";
             }
-            if (cc != "") {
+            if (cc != "" || cc != null) {
                 concatRequest = concatRequest + "cc:" + cc + "\n";
             }
-            if (bcc != "") {
+            if (bcc != "" || bcc != null) {
                 concatRequest = concatRequest + "bcc:" + bcc + "\n";
             }
-            if (id != "") {
-                concatRequest = concatRequest + "id:" + id + "\n";
-            }
-            if (threadId != "") {
-                concatRequest = concatRequest + "threadId:" + threadId + "\n";
-            }
-            if (messageBody != "") {
+            if (contentType != "" || contentType != null) {
+                concatRequest = concatRequest + "content-type:" + contentType + "\n";
+                concatRequest = concatRequest + "\n" + htmlBody + "\n";
+            } else {
                 concatRequest = concatRequest + "\n" + messageBody + "\n";
             }
         }
         string encodedRequest = util:base64Encode(concatRequest);
+        encodedRequest = encodedRequest.replace("+", "-");
+        encodedRequest = encodedRequest.replace("/", "_");
         json updateJSONRequest = {"message":{"raw":encodedRequest}};
-        string updatePath = "/v1/users/" + userId + "/drafts/" + draftId;
+        string updatePath = "/v1/users/" + userId + "/drafts/" + draft.id;
         request.setHeader("Content-Type", "Application/json");
         request.setJsonPayload(updateJSONRequest);
         response, e = gmailEP.put(updatePath, request);
@@ -325,74 +325,96 @@ public connector ClientConnector (string userId, string accessToken, string refr
         return updateResponse, errorResponse;
     }
 
-    @Description {value:"Delete a particular draft"}
-    @Param {value:"draftId: Id of the draft to delete"}
+    @Description {value:"Send a particular draft"}
+    @Param {value:"draftId: Id of the draft to send"}
     @Return {value:"response structs"}
-    action deleteDraft (string draftId) (StatusCode, Error) {
+    action send (string draftId) (GmailAPI, Error) {
         http:OutRequest request = {};
         http:InResponse response = {};
-        StatusCode deleteDraftResponse = {};
-        string deleteDraftPath = "/v1/users/" + userId + "/drafts/" + draftId;
-        response, e = gmailEP.delete(deleteDraftPath, request);
+        GmailAPI sendResponse = {};
+        json sendJSONRequest = {"id":draftId};
+        string sendPath = "/v1/users/" + userId + "/drafts/send";
+        request.setHeader("Content-Type", "Application/json");
+        request.setJsonPayload(sendJSONRequest);
+        response, e = gmailEP.post(sendPath, request);
         int statusCode = response.statusCode;
-        json deleteDraftJSONResponse = response.getJsonPayload();
+        io:println("Status code: " + statusCode);
+        json sendJSONResponse = response.getJsonPayload();
 
-        if (statusCode == 204) {
-            io:println("Status code: " + statusCode);
-            deleteDraftResponse, _ = <StatusCode>deleteDraftJSONResponse;
+        if (statusCode == 200) {
+            io:println(sendJSONResponse.toString());
+            sendResponse, _ = <GmailAPI>sendJSONResponse;
         } else {
-            errorResponse.errorMessage = deleteDraftJSONResponse.error;
+            errorResponse.errorMessage = sendJSONResponse.error;
         }
-        return deleteDraftResponse, errorResponse;
+        return sendResponse, errorResponse;
     }
 
     @Description {value:"Lists the drafts in the user's mailbox"}
-    @Param {value:"listDrafts: It is a struct. Which contains all optional parameters (includeSpamTrash,maxResults,
+    @Param {value:"getDrafts: It is a struct. Which contains all optional parameters (includeSpamTrash,maxResults,
     pageToken,q) to list drafts"}
     @Return {value:"response structs"}
-    action listDrafts (DraftsListFilter listDrafts) (Drafts, Error) {
+    action getDrafts (DraftsListFilter getDrafts) (Drafts, Error) {
         http:OutRequest request = {};
         http:InResponse response = {};
-        Drafts listDraftsResponse = {};
+        Drafts getDraftsResponse = {};
         string uriParams;
-        string listDraftsPath = "/v1/users/" + userId + "/drafts";
+        string getDraftsPath = "/v1/users/" + userId + "/drafts";
 
-        if (listDrafts != null) {
-            string includeSpamTrash = listDrafts.includeSpamTrash;
-            string maxResults = listDrafts.maxResults;
-            string pageToken = listDrafts.pageToken;
-            string q = listDrafts.q;
-
-            if (includeSpamTrash != "") {
-                uriParams = uriParams + "&includeSpamTrash=" + includeSpamTrash;
-            }
+        if (getDrafts != null) {
+            string includeSpamTrash = getDrafts.includeSpamTrash;
+            string maxResults = getDrafts.maxResults;
+            string pageToken = getDrafts.pageToken;
+            string q = getDrafts.q;
 
             if (maxResults != "") {
                 uriParams = uriParams + "&maxResults=" + maxResults;
             }
-
+            if (includeSpamTrash != "") {
+                uriParams = uriParams + "&includeSpamTrash=" + includeSpamTrash;
+            }
             if (pageToken != "") {
                 uriParams = uriParams + "&pageToken=" + pageToken;
             }
-
             if (q != "") {
                 uriParams = uriParams + "&q=" + q;
             }
         }
         if (uriParams != "") {
-            listDraftsPath = listDraftsPath + "?" + uriParams.subString(1, uriParams.length());
+            getDraftsPath = getDraftsPath + "?" + uriParams.subString(1, uriParams.length());
         }
-        response, e = gmailEP.get(listDraftsPath, request);
+        response, e = gmailEP.get(getDraftsPath, request);
         int statusCode = response.statusCode;
-        json listDraftsJSONResponse = response.getJsonPayload();
-
+        io:println("Status code: " + statusCode);
+        json getDraftsJSONResponse = response.getJsonPayload();
         if (statusCode == 200) {
-            io:println(listDraftsJSONResponse.toString());
-            listDraftsResponse, _ = <Drafts>listDraftsJSONResponse;
+            io:println(getDraftsJSONResponse.toString());
+            getDraftsResponse, _ = <Drafts>getDraftsJSONResponse;
         } else {
-            errorResponse.errorMessage = listDraftsJSONResponse.error;
+            errorResponse.errorMessage = getDraftsJSONResponse.error;
         }
-        return listDraftsResponse, errorResponse;
+        return getDraftsResponse, errorResponse;
+    }
+
+    @Description {value:"Delete a particular draft"}
+    @Param {value:"draftId: Id of the draft to delete"}
+    @Return {value:"response structs"}
+    action deleteDraft (Draft draft) (StatusCode, Error) {
+        http:OutRequest request = {};
+        http:InResponse response = {};
+        StatusCode deleteDraftResponse = {};
+        string deleteDraftPath = "/v1/users/" + userId + "/drafts/" + draft.id;
+        io:println(deleteDraftPath);
+        response, e = gmailEP.delete(deleteDraftPath, request);
+        int statusCode = response.statusCode;
+        json deleteDraftJSONResponse = {"statusCode":statusCode, "reasonPhrase":response.reasonPhrase};
+        io:println(deleteDraftJSONResponse);
+        if (statusCode == 204) {
+            deleteDraftResponse, _ = <StatusCode>deleteDraftJSONResponse;
+        } else {
+            errorResponse.errorMessage = deleteDraftJSONResponse.error;
+        }
+        return deleteDraftResponse, errorResponse;
     }
 }
 
@@ -404,14 +426,18 @@ transformer <json jsonUserProfile, UserProfile userProfile> userProfileTrans() {
 }
 
 transformer <json jsonMessage, Message message> messageTrans() {
-    message.to = jsonMessage.to.toString();
+    message.recipient = jsonMessage.to.toString();
     message.subject = jsonMessage.subject.toString();
-    message.from = jsonMessage.from.toString();
-    message.messageBody = jsonMessage.messageBody.toString();
-    message.cc = jsonMessage.cc.toString();
-    message.bcc = jsonMessage.bcc.toString();
-    message.id = jsonMessage.id.toString();
-    message.threadId = jsonMessage.threadId.toString();
+    message.body = jsonMessage.messageBody.toString();
+    message.options = jsonMessage.options.toString() != null?<Options, optionsTrans()>jsonMessage.options:{};
+}
+
+transformer <json jsonMessage, Options options> optionsTrans() {
+    options.contentType = jsonMessage.contentType.toString();
+    options.htmlBody = jsonMessage.htmlBody.toString();
+    options.from = jsonMessage.from.toString();
+    options.cc = jsonMessage.cc.toString();
+    options.bcc = jsonMessage.bcc.toString();
 }
 
 transformer <json jsonHeader, Header header> headerTrans() {
@@ -451,24 +477,6 @@ transformer <json jsonGmailAPI, GmailAPI gmailAPI> gmailAPITrans() {
     gmailAPI.internalDate = jsonGmailAPI.internalDate.toString() != null?jsonGmailAPI.internalDate.toString():null;
     gmailAPI.payload = jsonGmailAPI.payload.toString() != null?<MessagePayload, messagePayloadTrans()>jsonGmailAPI.payload:{};
     gmailAPI.sizeEstimate, _ = <int>jsonGmailAPI.sizeEstimate.toString();
-}
-
-transformer <json jsonDraft, Draft draft> draftTrans() {
-    draft.id = jsonDraft.id.toString();
-    draft.mailMessage = jsonDraft.mailMessage.toString() != null?<GmailAPI, gmailAPITrans()>jsonDraft.mailMessage:{};
-}
-
-transformer <json jsonDrafts, Drafts drafts> draftsTrans() {
-//drafts.drafts = jsonDrafts.drafts.toString()  != null ? <Draft, draftTrans()>jsonDrafts.drafts : {};
-    drafts.resultSizeEstimate, _ = <int>jsonDrafts.resultSizeEstimate.toString();
-    drafts.nextPageToken = jsonDrafts.nextPageToken.toString();
-}
-
-transformer <json jsonDraftsListFilter, DraftsListFilter draftsListFilter> draftsListFilter() {
-    draftsListFilter.includeSpamTrash = jsonDraftsListFilter.includeSpamTrash.toString();
-    draftsListFilter.maxResults = jsonDraftsListFilter.maxResults.toString();
-    draftsListFilter.pageToken = jsonDraftsListFilter.pageToken.toString();
-    draftsListFilter.q = jsonDraftsListFilter.q.toString();
 }
 
 transformer <json jsonStatusCode, StatusCode statusCode> statusCode() {

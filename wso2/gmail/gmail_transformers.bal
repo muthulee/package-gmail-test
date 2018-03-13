@@ -16,13 +16,6 @@
 
 package wso2.gmail;
 
-transformer <json jsonUserProfile, UserProfile userProfile> userProfileTrans() {
-    userProfile.emailAddress = jsonUserProfile.emailAddress.toString();
-    userProfile.messagesTotal, _ = <int>jsonUserProfile.messagesTotal.toString();
-    userProfile.threadsTotal, _ = <int>jsonUserProfile.threadsTotal.toString();
-    userProfile.historyId = jsonUserProfile.historyId.toString();
-}
-
 transformer <json jsonMessage, Message message> messageTrans() {
     message.recipient = jsonMessage.to.toString();
     message.subject = jsonMessage.subject.toString();

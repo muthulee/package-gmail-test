@@ -37,31 +37,6 @@ public connector ClientConnector (string userId, string accessToken, string refr
     http:HttpConnectorError e;
     Error errorResponse = {};
 
-    //string refreshTokenEP = "https://www.googleapis.com";
-    //string refreshTokenPath = "/oauth2/v3/token";
-    //string baseURL = "https://www.googleapis.com/gmail";
-
-    @Description {value:"Retrieve the user profile information"}
-    @Return {value:"response structs"}
-    action getUserProfile () (UserProfile, Error) {
-        http:OutRequest request = {};
-        http:InResponse response = {};
-        UserProfile getUserProfileResponse = {};
-        string getUserProfilePath = "/v1/users/" + userId + "/profile";
-
-        response, e = gmailEP.get(getUserProfilePath, request);
-        int statusCode = response.statusCode;
-        io:println("\nStatus code: " + statusCode);
-        json gmailJSONResponse = response.getJsonPayload();
-
-        if (statusCode == 200) {
-            getUserProfileResponse = <UserProfile, userProfileTrans()>gmailJSONResponse;
-        } else {
-            errorResponse.errorMessage = gmailJSONResponse.error;
-        }
-        return getUserProfileResponse, errorResponse;
-    }
-
     @Description {value:"Send a mail"}
     @Param {value:"sendEmail: It is a struct. Which contains all optional parameters (to,subject,from,messageBody,
     cc,bcc,id,threadId)"}
@@ -296,30 +271,6 @@ public connector ClientConnector (string userId, string accessToken, string refr
             errorResponse.errorMessage = getDraftsJSONResponse.error;
         }
         return getDraftsResponse, errorResponse;
-    }
-
-    @Description {value:"Send a particular draft"}
-    @Param {value:"draftId: Id of the draft to send"}
-    @Return {value:"response structs"}
-    action send (string draftId) (GmailAPI, Error) {
-        http:OutRequest request = {};
-        http:InResponse response = {};
-        GmailAPI sendResponse = {};
-        json sendJSONRequest = {"id":draftId};
-        string sendPath = "/v1/users/" + userId + "/drafts/send";
-        request.setHeader("Content-Type", "Application/json");
-        request.setJsonPayload(sendJSONRequest);
-        response, e = gmailEP.post(sendPath, request);
-        int statusCode = response.statusCode;
-        io:println("\nStatus code: " + statusCode);
-        json sendJSONResponse = response.getJsonPayload();
-
-        if (statusCode == 200) {
-            sendResponse = <GmailAPI, gmailAPITrans()>sendJSONResponse;
-        } else {
-            errorResponse.errorMessage = sendJSONResponse.error;
-        }
-        return sendResponse, errorResponse;
     }
 
     @Description {value:"Delete a particular draft"}

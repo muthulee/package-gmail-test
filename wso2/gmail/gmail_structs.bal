@@ -16,13 +16,6 @@
 
 package wso2.gmail;
 
-public struct UserProfile {
-    string emailAddress;
-    int messagesTotal;
-    int threadsTotal;
-    string historyId;
-}
-
 public struct Message {
     string recipient;
     string subject;
